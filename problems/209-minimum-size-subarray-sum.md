@@ -33,11 +33,6 @@ class Solution:
         return 0 if ans == float('inf') else ans
 ```
 
-## Complexity
-
-- Time: O()
-- Space: O()
-
 ## Mistakes / Traps
 
 <!-- What went wrong the first time -->

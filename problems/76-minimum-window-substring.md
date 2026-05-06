@@ -48,11 +48,6 @@ class Solution:
         return ans if ans[-1] != '^' else ""
 ```
 
-## Complexity
-
-- Time: O()
-- Space: O()
-
 ## Mistakes / Traps
 
 <!-- What went wrong the first time -->

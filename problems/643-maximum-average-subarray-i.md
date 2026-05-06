@@ -36,11 +36,6 @@ class Solution:
         return max_s / k
 ```
 
-## Complexity
-
-- Time: O()
-- Space: O()
-
 ## Mistakes / Traps
 
 <!-- What went wrong the first time -->

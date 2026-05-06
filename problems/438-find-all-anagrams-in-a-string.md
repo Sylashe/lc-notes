@@ -41,11 +41,6 @@ class Solution:
         return ans
 ```
 
-## Complexity
-
-- Time: O()
-- Space: O()
-
 ## Mistakes / Traps
 
 <!-- What went wrong the first time -->

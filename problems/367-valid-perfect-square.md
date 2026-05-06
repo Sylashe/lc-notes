@@ -34,11 +34,6 @@ class Solution:
         return False
 ```
 
-## Complexity
-
-- Time: O()
-- Space: O()
-
 ## Mistakes / Traps
 
 <!-- What went wrong the first time -->
