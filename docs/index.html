@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>lc-notes · Sylashe</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --easy: #00b8a3;
+      --medium: #ffc01e;
+      --hard: #ff375f;
+      --accent: #58a6ff;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
+    .container { max-width: 960px; margin: 0 auto; }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+
+    header .avatar {
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+    }
+
+    header h1 { font-size: 1.5rem; font-weight: 600; }
+    header p { color: var(--muted); font-size: 0.9rem; margin-top: 2px; }
+
+    header a {
+      margin-left: auto;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.85rem;
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      border-radius: 6px;
+      transition: background 0.15s;
+    }
+    header a:hover { background: var(--surface); }
+
+    /* ── Stats cards ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem 1.5rem;
+    }
+
+    .card .label { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: .5rem; }
+    .card .value { font-size: 2rem; font-weight: 700; }
+    .card.easy .value  { color: var(--easy); }
+    .card.medium .value { color: var(--medium); }
+    .card.hard .value  { color: var(--hard); }
+
+    /* ── Donut ── */
+    .charts-row {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .card.donut {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.5rem;
+    }
+
+    .donut-wrap { position: relative; width: 160px; height: 160px; margin-bottom: 1rem; }
+    .donut-wrap svg { transform: rotate(-90deg); }
+    .donut-center {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      font-size: 1.8rem; font-weight: 700;
+    }
+    .donut-center span { font-size: 0.75rem; color: var(--muted); font-weight: 400; }
+
+    .legend { width: 100%; }
+    .legend-item {
+      display: flex; align-items: center;
+      gap: .5rem; font-size: .85rem;
+      margin-bottom: .4rem;
+    }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .legend-item .count { margin-left: auto; color: var(--muted); }
+
+    /* ── Tag bars ── */
+    .card.tags { padding: 1.5rem; }
+    .card.tags h2 { font-size: .9rem; font-weight: 600; margin-bottom: 1rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+
+    .tag-bar-row {
+      display: flex; align-items: center;
+      gap: .75rem; margin-bottom: .6rem;
+    }
+    .tag-name { width: 160px; font-size: .85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tag-bar-track { flex: 1; height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
+    .tag-bar-fill  { height: 100%; background: var(--accent); border-radius: 99px; transition: width .6s ease; }
+    .tag-count { width: 28px; text-align: right; font-size: .8rem; color: var(--muted); }
+
+    /* ── Table ── */
+    .table-card { padding: 1.5rem; }
+    .table-header {
+      display: flex; align-items: center;
+      justify-content: space-between; margin-bottom: 1rem;
+    }
+    .table-header h2 { font-size: .9rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+
+    .filters { display: flex; gap: .5rem; }
+    .filter-btn {
+      background: none; border: 1px solid var(--border); color: var(--muted);
+      padding: 4px 10px; border-radius: 6px; font-size: .8rem; cursor: pointer;
+      transition: all .15s;
+    }
+    .filter-btn.active, .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .search-box {
+      width: 100%; background: var(--bg); border: 1px solid var(--border);
+      color: var(--text); border-radius: 6px; padding: 7px 12px;
+      font-size: .85rem; margin-bottom: 1rem; outline: none;
+    }
+    .search-box:focus { border-color: var(--accent); }
+
+    table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+    thead th {
+      text-align: left; color: var(--muted); font-weight: 500;
+      font-size: .78rem; text-transform: uppercase; letter-spacing: .05em;
+      padding: .5rem .75rem; border-bottom: 1px solid var(--border);
+    }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+    tbody tr:hover { background: var(--surface); }
+    tbody td { padding: .65rem .75rem; }
+    tbody td:first-child { color: var(--muted); width: 55px; }
+
+    .diff-badge {
+      display: inline-block; padding: 2px 8px; border-radius: 99px;
+      font-size: .75rem; font-weight: 500;
+    }
+    .diff-badge.Easy   { background: #00b8a31a; color: var(--easy); }
+    .diff-badge.Medium { background: #ffc01e1a; color: var(--medium); }
+    .diff-badge.Hard   { background: #ff375f1a; color: var(--hard); }
+
+    .tags-cell { display: flex; flex-wrap: wrap; gap: 4px; }
+    .tag-chip {
+      background: #58a6ff18; color: var(--accent);
+      border-radius: 4px; font-size: .72rem; padding: 1px 6px;
+    }
+
+    a.problem-link { color: var(--text); text-decoration: none; }
+    a.problem-link:hover { color: var(--accent); text-decoration: underline; }
+
+    .pagination {
+      display: flex; justify-content: center; align-items: center;
+      gap: .5rem; margin-top: 1.25rem;
+    }
+    .page-btn {
+      background: none; border: 1px solid var(--border); color: var(--muted);
+      width: 32px; height: 32px; border-radius: 6px; cursor: pointer;
+      font-size: .85rem; display: flex; align-items: center; justify-content: center;
+      transition: all .15s;
+    }
+    .page-btn:hover, .page-btn.active { border-color: var(--accent); color: var(--accent); }
+    .page-btn:disabled { opacity: .3; cursor: default; }
+
+    @media (max-width: 640px) {
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .charts-row { grid-template-columns: 1fr; }
+      .tag-name { width: 110px; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <img class="avatar" src="https://avatars.githubusercontent.com/u/Sylashe" alt="avatar" onerror="this.src='https://github.com/identicons/Sylashe.png'">
+    <div>
+      <h1>lc-notes</h1>
+      <p>Sylashe's LeetCode progress tracker</p>
+    </div>
+    <a href="https://github.com/Sylashe/lc-notes" target="_blank">View on GitHub →</a>
+  </header>
+
+  <!-- Stats cards -->
+  <div class="stats-row">
+    <div class="card">
+      <div class="label">Total Solved</div>
+      <div class="value" id="total">—</div>
+    </div>
+    <div class="card easy">
+      <div class="label">Easy</div>
+      <div class="value" id="easy-count">—</div>
+    </div>
+    <div class="card medium">
+      <div class="label">Medium</div>
+      <div class="value" id="medium-count">—</div>
+    </div>
+    <div class="card hard">
+      <div class="label">Hard</div>
+      <div class="value" id="hard-count">—</div>
+    </div>
+  </div>
+
+  <!-- Donut + tag bars -->
+  <div class="charts-row">
+    <div class="card donut">
+      <div class="donut-wrap">
+        <svg width="160" height="160" viewBox="0 0 160 160">
+          <circle cx="80" cy="80" r="62" fill="none" stroke="#30363d" stroke-width="18"/>
+          <circle id="arc-easy"   cx="80" cy="80" r="62" fill="none" stroke="#00b8a3" stroke-width="18" stroke-dasharray="0 999"/>
+          <circle id="arc-medium" cx="80" cy="80" r="62" fill="none" stroke="#ffc01e" stroke-width="18" stroke-dasharray="0 999"/>
+          <circle id="arc-hard"   cx="80" cy="80" r="62" fill="none" stroke="#ff375f" stroke-width="18" stroke-dasharray="0 999"/>
+        </svg>
+        <div class="donut-center">
+          <strong id="donut-total">—</strong>
+          <span>solved</span>
+        </div>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--easy)"></div> Easy <span class="count" id="leg-easy">—</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--medium)"></div> Medium <span class="count" id="leg-medium">—</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--hard)"></div> Hard <span class="count" id="leg-hard">—</span></div>
+      </div>
+    </div>
+
+    <div class="card tags">
+      <h2>Top Topics</h2>
+      <div id="tag-bars"></div>
+    </div>
+  </div>
+
+  <!-- Problem table -->
+  <div class="card table-card">
+    <div class="table-header">
+      <h2>Problems</h2>
+      <div class="filters">
+        <button class="filter-btn active" data-diff="All">All</button>
+        <button class="filter-btn" data-diff="Easy">Easy</button>
+        <button class="filter-btn" data-diff="Medium">Medium</button>
+        <button class="filter-btn" data-diff="Hard">Hard</button>
+      </div>
+    </div>
+    <input class="search-box" id="search" placeholder="Search problems or topics…" />
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Title</th>
+          <th>Difficulty</th>
+          <th>Topics</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+    <div class="pagination" id="pagination"></div>
+  </div>
+
+</div>
+
+<script>
+const CIRCUMFERENCE = 2 * Math.PI * 62;
+const PAGE_SIZE = 20;
+
+let allProblems = [];
+let filtered = [];
+let currentPage = 1;
+let activeDiff = 'All';
+let searchQuery = '';
+
+async function loadData() {
+  const res = await fetch('data.json');
+  allProblems = await res.json();
+  render();
+}
+
+function render() {
+  const easy   = allProblems.filter(p => p.difficulty === 'Easy').length;
+  const medium = allProblems.filter(p => p.difficulty === 'Medium').length;
+  const hard   = allProblems.filter(p => p.difficulty === 'Hard').length;
+  const total  = allProblems.length;
+
+  // Cards
+  document.getElementById('total').textContent = total;
+  document.getElementById('easy-count').textContent = easy;
+  document.getElementById('medium-count').textContent = medium;
+  document.getElementById('hard-count').textContent = hard;
+  document.getElementById('donut-total').textContent = total;
+  document.getElementById('leg-easy').textContent = easy;
+  document.getElementById('leg-medium').textContent = medium;
+  document.getElementById('leg-hard').textContent = hard;
+
+  // Donut arcs
+  let offset = 0;
+  function setArc(id, count) {
+    const pct = count / total;
+    const dash = pct * CIRCUMFERENCE;
+    const el = document.getElementById(id);
+    el.style.strokeDasharray = `${dash} ${CIRCUMFERENCE - dash}`;
+    el.style.strokeDashoffset = -offset;
+    offset += dash;
+  }
+  setArc('arc-easy', easy);
+  setArc('arc-medium', medium);
+  setArc('arc-hard', hard);
+
+  // Tag bars
+  const tagCount = {};
+  allProblems.forEach(p => p.tags.forEach(t => { tagCount[t] = (tagCount[t] || 0) + 1; }));
+  const topTags = Object.entries(tagCount).sort((a,b) => b[1]-a[1]).slice(0, 12);
+  const maxTag = topTags[0]?.[1] || 1;
+  document.getElementById('tag-bars').innerHTML = topTags.map(([tag, cnt]) => `
+    <div class="tag-bar-row">
+      <div class="tag-name">${tag}</div>
+      <div class="tag-bar-track"><div class="tag-bar-fill" style="width:${cnt/maxTag*100}%"></div></div>
+      <div class="tag-count">${cnt}</div>
+    </div>
+  `).join('');
+
+  applyFilter();
+}
+
+function applyFilter() {
+  filtered = allProblems.filter(p => {
+    if (activeDiff !== 'All' && p.difficulty !== activeDiff) return false;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      return p.title.toLowerCase().includes(q) ||
+             p.tags.some(t => t.toLowerCase().includes(q));
+    }
+    return true;
+  });
+  currentPage = 1;
+  renderTable();
+}
+
+function renderTable() {
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const page  = filtered.slice(start, start + PAGE_SIZE);
+
+  document.getElementById('table-body').innerHTML = page.map(p => `
+    <tr>
+      <td>${p.id}</td>
+      <td><a class="problem-link" href="https://leetcode.com/problems/${p.slug}/" target="_blank">${p.title}</a></td>
+      <td><span class="diff-badge ${p.difficulty}">${p.difficulty}</span></td>
+      <td><div class="tags-cell">${p.tags.slice(0,3).map(t => `<span class="tag-chip">${t}</span>`).join('')}</div></td>
+    </tr>
+  `).join('');
+
+  renderPagination();
+}
+
+function renderPagination() {
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const el = document.getElementById('pagination');
+  if (totalPages <= 1) { el.innerHTML = ''; return; }
+
+  let html = `<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`;
+  for (let i = 1; i <= totalPages; i++) {
+    if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 2) {
+      html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+    } else if (Math.abs(i - currentPage) === 3) {
+      html += `<span style="color:var(--muted);padding:0 4px">…</span>`;
+    }
+  }
+  html += `<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}>›</button>`;
+  el.innerHTML = html;
+}
+
+function goPage(p) {
+  currentPage = p;
+  renderTable();
+  window.scrollTo({ top: document.querySelector('.table-card').offsetTop - 20, behavior: 'smooth' });
+}
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeDiff = btn.dataset.diff;
+    applyFilter();
+  });
+});
+
+document.getElementById('search').addEventListener('input', e => {
+  searchQuery = e.target.value.trim();
+  applyFilter();
+});
+
+loadData();
+</script>
+</body>
+</html>
