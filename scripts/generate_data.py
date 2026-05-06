@@ -10,21 +10,25 @@ OUT_FILE = os.path.join(os.path.dirname(__file__), "..", "docs", "data.json")
 
 
 def parse_problem(path):
+    fname = os.path.basename(path)
+    # Derive slug from filename: "239-sliding-window-maximum.md" -> "sliding-window-maximum"
+    slug_from_file = re.sub(r"^\d+-", "", fname[:-3])
+
     with open(path, encoding="utf-8") as f:
         content = f.read()
 
     number = re.search(r"^# (\d+)\.", content, re.MULTILINE)
     title = re.search(r"^# \d+\. (.+)$", content, re.MULTILINE)
     difficulty = re.search(r"\*\*Difficulty:\*\* (.+)", content)
-    tags = re.findall(r"`([^`]+)`", (re.search(r"\*\*Tags:\*\* (.+)", content) or type('', (), {'group': lambda s, x: ''})()).group(1) if re.search(r"\*\*Tags:\*\* (.+)", content) else "")
-    slug = re.search(r"https://leetcode\.com/problems/([^/]+)/", content)
+    tags_line = re.search(r"\*\*Tags:\*\* (.+)", content)
+    tags = re.findall(r"`([^`]+)`", tags_line.group(1) if tags_line else "")
 
     return {
         "id": int(number.group(1)) if number else 0,
         "title": title.group(1).strip() if title else "",
         "difficulty": difficulty.group(1).strip() if difficulty else "",
         "tags": tags,
-        "slug": slug.group(1) if slug else "",
+        "slug": slug_from_file,
     }
 
 
