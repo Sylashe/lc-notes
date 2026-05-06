@@ -125,6 +125,26 @@
     .tag-bar-fill  { height: 100%; background: var(--accent); border-radius: 99px; transition: width .6s ease; }
     .tag-count { width: 28px; text-align: right; font-size: .8rem; color: var(--muted); }
 
+    /* ── Heatmap ── */
+    .card.heatmap { padding: 1.5rem; margin-bottom: 2rem; overflow-x: auto; }
+    .card.heatmap h2 { font-size: .9rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 1rem; }
+    .heatmap-grid { display: flex; gap: 3px; align-items: flex-start; }
+    .heatmap-col  { display: flex; flex-direction: column; gap: 3px; }
+    .heatmap-cell {
+      width: 12px; height: 12px; border-radius: 2px;
+      background: var(--border); cursor: default;
+      transition: opacity .15s;
+    }
+    .heatmap-cell:hover { opacity: .75; }
+    .heatmap-cell[data-n="1"] { background: #0e4429; }
+    .heatmap-cell[data-n="2"] { background: #006d32; }
+    .heatmap-cell[data-n="3"] { background: #26a641; }
+    .heatmap-cell[data-n="4"] { background: #39d353; }
+    .heatmap-months { display: flex; gap: 3px; margin-bottom: 4px; font-size: .7rem; color: var(--muted); }
+    .heatmap-month { flex: 1; }
+    .heatmap-footer { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: .75rem; color: var(--muted); justify-content: flex-end; }
+    .heatmap-footer .heatmap-cell { cursor: default; }
+
     /* ── Table ── */
     .table-card { padding: 1.5rem; }
     .table-header {
@@ -256,6 +276,22 @@
     </div>
   </div>
 
+  <!-- Heatmap -->
+  <div class="card heatmap">
+    <h2>Activity <span id="heatmap-year" style="color:var(--text);font-weight:400"></span></h2>
+    <div class="heatmap-months" id="heatmap-months"></div>
+    <div class="heatmap-grid" id="heatmap-grid"></div>
+    <div class="heatmap-footer">
+      Less
+      <div class="heatmap-cell"></div>
+      <div class="heatmap-cell" data-n="1"></div>
+      <div class="heatmap-cell" data-n="2"></div>
+      <div class="heatmap-cell" data-n="3"></div>
+      <div class="heatmap-cell" data-n="4"></div>
+      More
+    </div>
+  </div>
+
   <!-- Problem table -->
   <div class="card table-card">
     <div class="table-header">
@@ -294,6 +330,83 @@ let currentPage = 1;
 let activeDiff = 'All';
 let searchQuery = '';
 
+function renderHeatmap(problems) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const WEEKS = 53;
+  // Start from Sunday 53 weeks ago
+  const start = new Date(today);
+  start.setDate(start.getDate() - today.getDay() - (WEEKS - 1) * 7);
+
+  // Count problems per day (using lastSubmittedAt timestamp)
+  const dayCount = {};
+  problems.forEach(p => {
+    if (!p.ts) return;
+    const d = new Date(p.ts * 1000);
+    d.setHours(0, 0, 0, 0);
+    const key = d.toISOString().slice(0, 10);
+    dayCount[key] = (dayCount[key] || 0) + 1;
+  });
+
+  const maxDay = Math.max(1, ...Object.values(dayCount));
+
+  // Build grid: columns = weeks, rows = days (0=Sun)
+  const grid = document.getElementById('heatmap-grid');
+  grid.innerHTML = '';
+  const monthsEl = document.getElementById('heatmap-months');
+  monthsEl.innerHTML = '';
+  document.getElementById('heatmap-year').textContent =
+    `${start.getFullYear()} – ${today.getFullYear()}`;
+
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  let lastMonth = -1;
+  const monthSpans = [];
+  let curMonthWeeks = 0;
+
+  for (let w = 0; w < WEEKS; w++) {
+    const col = document.createElement('div');
+    col.className = 'heatmap-col';
+
+    for (let d = 0; d < 7; d++) {
+      const date = new Date(start);
+      date.setDate(start.getDate() + w * 7 + d);
+      const key = date.toISOString().slice(0, 10);
+      const n = dayCount[key] || 0;
+      const cell = document.createElement('div');
+      cell.className = 'heatmap-cell';
+      if (n > 0) {
+        const level = Math.min(4, Math.ceil((n / maxDay) * 4));
+        cell.dataset.n = level;
+        cell.title = `${key}: ${n} problem${n > 1 ? 's' : ''}`;
+      }
+      if (date > today) cell.style.opacity = '0';
+      col.appendChild(cell);
+    }
+    grid.appendChild(col);
+
+    // Track month labels
+    const weekStart = new Date(start);
+    weekStart.setDate(start.getDate() + w * 7);
+    const m = weekStart.getMonth();
+    if (m !== lastMonth) {
+      if (lastMonth !== -1) monthSpans.push({ label: MONTHS[lastMonth], weeks: curMonthWeeks });
+      lastMonth = m;
+      curMonthWeeks = 1;
+    } else {
+      curMonthWeeks++;
+    }
+  }
+  monthSpans.push({ label: MONTHS[lastMonth], weeks: curMonthWeeks });
+
+  monthSpans.forEach(({ label, weeks }) => {
+    const span = document.createElement('div');
+    span.className = 'heatmap-month';
+    span.style.minWidth = `${weeks * 15}px`;
+    span.textContent = label;
+    monthsEl.appendChild(span);
+  });
+}
+
 async function loadData() {
   const res = await fetch('data.json');
   allProblems = await res.json();
@@ -315,6 +428,8 @@ function render() {
   document.getElementById('leg-easy').textContent = easy;
   document.getElementById('leg-medium').textContent = medium;
   document.getElementById('leg-hard').textContent = hard;
+
+  renderHeatmap(allProblems);
 
   // Donut arcs
   let offset = 0;
