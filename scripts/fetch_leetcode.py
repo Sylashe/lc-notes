@@ -9,6 +9,7 @@ import json
 import os
 import re
 import time
+from datetime import datetime, timezone
 import requests
 
 USERNAME = "ieFnaHeH"
@@ -86,6 +87,7 @@ def fetch_all_solved_problems(session):
               titleSlug
               difficulty
               lastResult
+              lastSubmittedAt
               topicTags {{ name }}
             }}
           }}
@@ -296,8 +298,29 @@ def main():
         print(f"→ {fname}")
         created += 1
 
+    # Save timestamps for heatmap
+    ts_path = os.path.join(os.path.dirname(__file__), "..", "docs", "timestamps.json")
+    existing_ts = {}
+    if os.path.exists(ts_path):
+        with open(ts_path) as f:
+            existing_ts = json.load(f)
+    for prob in problems:
+        slug = prob["titleSlug"]
+        ts = prob.get("lastSubmittedAt")
+        if ts:
+            try:
+                # Could be ISO string or Unix int
+                existing_ts[slug] = int(ts) if str(ts).isdigit() else \
+                    int(datetime.fromisoformat(str(ts).replace("Z", "+00:00")).timestamp())
+            except Exception:
+                pass
+    os.makedirs(os.path.dirname(ts_path), exist_ok=True)
+    with open(ts_path, "w") as f:
+        json.dump(existing_ts, f)
+    print(f"Updated timestamps for {len(existing_ts)} problems → docs/timestamps.json")
+
     print(f"\nDone. Created: {created}, Skipped: {skipped}")
-    print("Run `git add problems/ && git commit -m 'add: import leetcode submissions'` to save.")
+    print("Run `git add problems/ docs/ && git commit -m 'add: import leetcode submissions'` to save.")
 
 
 if __name__ == "__main__":

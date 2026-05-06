@@ -29,6 +29,13 @@ def parse_problem(path):
 
 
 def main():
+    # Load timestamps
+    ts_path = os.path.join(os.path.dirname(__file__), "..", "docs", "timestamps.json")
+    timestamps = {}
+    if os.path.exists(ts_path):
+        with open(ts_path) as f:
+            timestamps = json.load(f)
+
     problems = []
     for fname in os.listdir(PROBLEMS_DIR):
         if not fname.endswith(".md") or fname == "template.md":
@@ -36,6 +43,7 @@ def main():
         try:
             p = parse_problem(os.path.join(PROBLEMS_DIR, fname))
             if p["id"] > 0:
+                p["ts"] = timestamps.get(p["slug"], 0)
                 problems.append(p)
         except Exception as e:
             print(f"  Warning: {fname}: {e}")
