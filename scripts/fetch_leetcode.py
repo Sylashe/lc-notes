@@ -36,12 +36,21 @@ LANG_FENCE = {
 }
 
 
-def gql(session, query, variables=None):
-    resp = session.post(GRAPHQL_URL, json={"query": query, "variables": variables or {}})
-    if not resp.ok:
+def gql(session, query, variables=None, retries=3):
+    for attempt in range(retries):
+        resp = session.post(GRAPHQL_URL, json={"query": query, "variables": variables or {}})
+        if resp.ok:
+            return resp.json()
+        if resp.status_code in (429, 503, 504) and attempt < retries - 1:
+            wait = (attempt + 1) * 5
+            print(f"\n  HTTP {resp.status_code}, retrying in {wait}s...")
+            time.sleep(wait)
+            continue
+        if resp.status_code == 404:
+            return {}  # silently skip inaccessible submissions
         print(f"\n  HTTP {resp.status_code}: {resp.text[:300]}")
-    resp.raise_for_status()
-    return resp.json()
+        resp.raise_for_status()
+    return {}
 
 
 def fetch_all_solved_problems(session):
