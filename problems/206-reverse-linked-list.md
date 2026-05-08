@@ -26,14 +26,15 @@
 #         self.next = next
 class Solution:
     def reverseList(self, head: Optional[ListNode]) -> Optional[ListNode]:
-        prev = None
-        cur = head
-        while cur:
+        def helper(pre, cur):
+            if cur == None:
+                return pre
             nxt = cur.next
-            cur.next = prev
-            prev = cur
+            cur.next = pre
+            pre = cur
             cur = nxt
-        return prev
+            return helper(pre, cur)
+        return helper(None, head)
 ```
 
 ## Mistakes / Traps
