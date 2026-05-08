@@ -125,25 +125,87 @@
     .tag-bar-fill  { height: 100%; background: var(--accent); border-radius: 99px; transition: width .6s ease; }
     .tag-count { width: 28px; text-align: right; font-size: .8rem; color: var(--muted); }
 
-    /* ── Heatmap ── */
-    .card.heatmap { padding: 1.5rem; margin-bottom: 2rem; overflow-x: auto; }
-    .card.heatmap h2 { font-size: .9rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 1rem; }
-    .heatmap-grid { display: flex; gap: 3px; align-items: flex-start; }
-    .heatmap-col  { display: flex; flex-direction: column; gap: 3px; }
-    .heatmap-cell {
-      width: 12px; height: 12px; border-radius: 2px;
-      background: var(--border); cursor: default;
-      transition: opacity .15s;
+    /* ── Heatmap (calendar style) ── */
+    .card.heatmap { padding: 1.5rem; margin-bottom: 2rem; }
+    .card.heatmap .heatmap-head {
+      display: flex; align-items: baseline; justify-content: space-between;
+      margin-bottom: 1.25rem; flex-wrap: wrap; gap: .5rem;
     }
-    .heatmap-cell:hover { opacity: .75; }
-    .heatmap-cell[data-n="1"] { background: #0e4429; }
-    .heatmap-cell[data-n="2"] { background: #006d32; }
-    .heatmap-cell[data-n="3"] { background: #26a641; }
-    .heatmap-cell[data-n="4"] { background: #39d353; }
-    .heatmap-months { display: flex; gap: 3px; margin-bottom: 4px; font-size: .7rem; color: var(--muted); }
-    .heatmap-month { flex: 1; }
-    .heatmap-footer { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: .75rem; color: var(--muted); justify-content: flex-end; }
-    .heatmap-footer .heatmap-cell { cursor: default; }
+    .card.heatmap h2 { font-size: .9rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+    .heatmap-summary { font-size: .8rem; color: var(--muted); }
+    .heatmap-summary strong { color: var(--text); font-weight: 600; }
+
+    .heatmap-calendar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: .75rem;
+    }
+    .month-block {
+      background: rgba(255,255,255,.015);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: .65rem .7rem .7rem;
+      transition: border-color .2s;
+    }
+    .month-block.is-current {
+      border-color: rgba(88,166,255,.35);
+      background: rgba(88,166,255,.04);
+    }
+    .month-title {
+      font-size: .72rem;
+      font-weight: 600;
+      letter-spacing: .03em;
+      color: var(--text);
+      margin-bottom: .4rem;
+      display: flex; justify-content: space-between; align-items: baseline;
+    }
+    .month-title .month-count { color: var(--muted); font-weight: 400; font-size: .68rem; }
+    .month-dow, .month-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+    }
+    .month-dow {
+      margin-bottom: 3px;
+      font-size: .55rem;
+      color: var(--muted);
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .day-cell {
+      aspect-ratio: 1;
+      border-radius: 2px;
+      background: rgba(48,54,61,.45);
+      position: relative;
+      transition: transform .15s, box-shadow .15s;
+    }
+    .day-cell.pad { background: transparent; }
+    .day-cell.future { opacity: .15; }
+    .day-cell.is-today { outline: 1px solid var(--accent); outline-offset: 1px; }
+    .day-cell.active { cursor: default; }
+    .day-cell.active:hover { transform: scale(1.55); z-index: 4; }
+    .day-cell.diff-easy   { background: var(--easy); }
+    .day-cell.diff-medium { background: var(--medium); }
+    .day-cell.diff-hard   { background: var(--hard); }
+    .day-cell.active[data-intensity="1"] { opacity: .55; }
+    .day-cell.active[data-intensity="2"] { opacity: .75; }
+    .day-cell.active[data-intensity="3"] { opacity: 1;  }
+    .day-cell.active[data-intensity="4"] { opacity: 1; box-shadow: 0 0 6px currentColor; }
+    .day-cell.diff-easy.active[data-intensity="4"]   { color: var(--easy); }
+    .day-cell.diff-medium.active[data-intensity="4"] { color: var(--medium); }
+    .day-cell.diff-hard.active[data-intensity="4"]   { color: var(--hard); }
+
+    .heatmap-legend {
+      display: flex; flex-wrap: wrap; gap: 1.25rem;
+      margin-top: 1.25rem; padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      font-size: .72rem; color: var(--muted);
+      align-items: center;
+    }
+    .legend-group { display: flex; align-items: center; gap: .4rem; }
+    .legend-group .day-cell { width: 11px; height: 11px; aspect-ratio: auto; }
+    .legend-group .day-cell:hover { transform: none; }
 
     /* ── Table ── */
     .table-card { padding: 1.5rem; }
@@ -209,10 +271,14 @@
     .page-btn:hover, .page-btn.active { border-color: var(--accent); color: var(--accent); }
     .page-btn:disabled { opacity: .3; cursor: default; }
 
+    @media (max-width: 900px) {
+      .heatmap-calendar { grid-template-columns: repeat(3, 1fr); }
+    }
     @media (max-width: 640px) {
       .stats-row { grid-template-columns: repeat(2, 1fr); }
       .charts-row { grid-template-columns: 1fr; }
       .tag-name { width: 110px; }
+      .heatmap-calendar { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
 </head>
@@ -278,17 +344,32 @@
 
   <!-- Heatmap -->
   <div class="card heatmap">
-    <h2>Activity <span id="heatmap-year" style="color:var(--text);font-weight:400"></span></h2>
-    <div class="heatmap-months" id="heatmap-months"></div>
-    <div class="heatmap-grid" id="heatmap-grid"></div>
-    <div class="heatmap-footer">
-      Less
-      <div class="heatmap-cell"></div>
-      <div class="heatmap-cell" data-n="1"></div>
-      <div class="heatmap-cell" data-n="2"></div>
-      <div class="heatmap-cell" data-n="3"></div>
-      <div class="heatmap-cell" data-n="4"></div>
-      More
+    <div class="heatmap-head">
+      <h2>Activity Calendar</h2>
+      <div class="heatmap-summary" id="heatmap-summary"></div>
+    </div>
+    <div class="heatmap-calendar" id="heatmap-grid"></div>
+    <div class="heatmap-legend">
+      <div class="legend-group">
+        <div class="day-cell diff-easy active" data-intensity="3"></div>
+        <span>Easy</span>
+      </div>
+      <div class="legend-group">
+        <div class="day-cell diff-medium active" data-intensity="3"></div>
+        <span>Medium</span>
+      </div>
+      <div class="legend-group">
+        <div class="day-cell diff-hard active" data-intensity="3"></div>
+        <span>Hard</span>
+      </div>
+      <div class="legend-group" style="margin-left:auto">
+        <span>Fewer</span>
+        <div class="day-cell diff-easy active" data-intensity="1"></div>
+        <div class="day-cell diff-easy active" data-intensity="2"></div>
+        <div class="day-cell diff-easy active" data-intensity="3"></div>
+        <div class="day-cell diff-easy active" data-intensity="4"></div>
+        <span>More</span>
+      </div>
     </div>
   </div>
 
@@ -333,78 +414,132 @@ let searchQuery = '';
 function renderHeatmap(problems) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const WEEKS = 53;
-  // Start from Sunday 53 weeks ago
-  const start = new Date(today);
-  start.setDate(start.getDate() - today.getDay() - (WEEKS - 1) * 7);
+  const todayKey = toKey(today);
 
-  // Count problems per day (using lastSubmittedAt timestamp)
-  const dayCount = {};
+  // Aggregate per-day: count + hardest difficulty
+  const DIFF_RANK = { Easy: 1, Medium: 2, Hard: 3 };
+  const DIFF_NAME = ['', 'easy', 'medium', 'hard'];
+  const dayData = {};
   problems.forEach(p => {
     if (!p.ts) return;
     const d = new Date(p.ts * 1000);
     d.setHours(0, 0, 0, 0);
-    const key = d.toISOString().slice(0, 10);
-    dayCount[key] = (dayCount[key] || 0) + 1;
+    const key = toKey(d);
+    if (!dayData[key]) dayData[key] = { count: 0, hardest: 0, titles: [] };
+    dayData[key].count++;
+    const r = DIFF_RANK[p.difficulty] || 0;
+    if (r > dayData[key].hardest) dayData[key].hardest = r;
+    dayData[key].titles.push(`${p.difficulty[0]} · ${p.title}`);
   });
 
-  const maxDay = Math.max(1, ...Object.values(dayCount));
+  // Last 12 months ending with current
+  const months = [];
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+    months.push({ year: d.getFullYear(), month: d.getMonth() });
+  }
 
-  // Build grid: columns = weeks, rows = days (0=Sun)
-  const grid = document.getElementById('heatmap-grid');
-  grid.innerHTML = '';
-  const monthsEl = document.getElementById('heatmap-months');
-  monthsEl.innerHTML = '';
-  document.getElementById('heatmap-year').textContent =
-    `${start.getFullYear()} – ${today.getFullYear()}`;
+  const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const DOW = ['S','M','T','W','T','F','S'];
+  const container = document.getElementById('heatmap-grid');
+  container.innerHTML = '';
 
-  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  let lastMonth = -1;
-  const monthSpans = [];
-  let curMonthWeeks = 0;
+  let totalSolved = 0, activeDays = 0, currentStreak = 0, longestStreak = 0, runStreak = 0;
 
-  for (let w = 0; w < WEEKS; w++) {
-    const col = document.createElement('div');
-    col.className = 'heatmap-col';
-
-    for (let d = 0; d < 7; d++) {
-      const date = new Date(start);
-      date.setDate(start.getDate() + w * 7 + d);
-      const key = date.toISOString().slice(0, 10);
-      const n = dayCount[key] || 0;
-      const cell = document.createElement('div');
-      cell.className = 'heatmap-cell';
-      if (n > 0) {
-        const level = Math.min(4, Math.ceil((n / maxDay) * 4));
-        cell.dataset.n = level;
-        cell.title = `${key}: ${n} problem${n > 1 ? 's' : ''}`;
-      }
-      if (date > today) cell.style.opacity = '0';
-      col.appendChild(cell);
+  months.forEach(({ year, month }) => {
+    const block = document.createElement('div');
+    block.className = 'month-block';
+    if (year === today.getFullYear() && month === today.getMonth()) {
+      block.classList.add('is-current');
     }
-    grid.appendChild(col);
 
-    // Track month labels
-    const weekStart = new Date(start);
-    weekStart.setDate(start.getDate() + w * 7);
-    const m = weekStart.getMonth();
-    if (m !== lastMonth) {
-      if (lastMonth !== -1) monthSpans.push({ label: MONTHS[lastMonth], weeks: curMonthWeeks });
-      lastMonth = m;
-      curMonthWeeks = 1;
+    // Count for this month
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    let monthCount = 0;
+    for (let day = 1; day <= daysInMonth; day++) {
+      const key = toKey(new Date(year, month, day));
+      if (dayData[key]) monthCount += dayData[key].count;
+    }
+
+    const title = document.createElement('div');
+    title.className = 'month-title';
+    title.innerHTML = `<span>${MONTH_NAMES[month]} <span style="color:var(--muted);font-weight:400">${year}</span></span><span class="month-count">${monthCount || ''}</span>`;
+    block.appendChild(title);
+
+    const dowRow = document.createElement('div');
+    dowRow.className = 'month-dow';
+    DOW.forEach(d => {
+      const c = document.createElement('span');
+      c.textContent = d;
+      dowRow.appendChild(c);
+    });
+    block.appendChild(dowRow);
+
+    const grid = document.createElement('div');
+    grid.className = 'month-grid';
+
+    const startWeekday = new Date(year, month, 1).getDay();
+    for (let i = 0; i < startWeekday; i++) {
+      const pad = document.createElement('div');
+      pad.className = 'day-cell pad';
+      grid.appendChild(pad);
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day);
+      const key = toKey(date);
+      const data = dayData[key];
+      const cell = document.createElement('div');
+      cell.className = 'day-cell';
+
+      if (data) {
+        const intensity = Math.min(4, Math.ceil(data.count / 1.5));
+        cell.classList.add('active', `diff-${DIFF_NAME[data.hardest]}`);
+        cell.dataset.intensity = intensity;
+        const titleStr = data.titles.slice(0, 4).join('\n') + (data.titles.length > 4 ? `\n+ ${data.titles.length - 4} more` : '');
+        cell.title = `${key} · ${data.count} problem${data.count > 1 ? 's' : ''}\n${titleStr}`;
+        totalSolved += data.count;
+        activeDays++;
+      }
+
+      if (date > today) cell.classList.add('future');
+      if (key === todayKey) cell.classList.add('is-today');
+
+      grid.appendChild(cell);
+    }
+
+    block.appendChild(grid);
+    container.appendChild(block);
+  });
+
+  // Streaks (over the last 12 months window)
+  const earliest = new Date(months[0].year, months[0].month, 1);
+  for (let d = new Date(earliest); d <= today; d.setDate(d.getDate() + 1)) {
+    if (dayData[toKey(d)]) {
+      runStreak++;
+      if (runStreak > longestStreak) longestStreak = runStreak;
     } else {
-      curMonthWeeks++;
+      runStreak = 0;
     }
   }
-  monthSpans.push({ label: MONTHS[lastMonth], weeks: curMonthWeeks });
+  // Current streak: walk back from today
+  let cs = 0;
+  for (let d = new Date(today); ; d.setDate(d.getDate() - 1)) {
+    if (dayData[toKey(d)]) cs++;
+    else break;
+  }
+  currentStreak = cs;
 
-  monthSpans.forEach(({ label, weeks }) => {
-    const span = document.createElement('div');
-    span.className = 'heatmap-month';
-    span.style.minWidth = `${weeks * 15}px`;
-    span.textContent = label;
-    monthsEl.appendChild(span);
-  });
+  document.getElementById('heatmap-summary').innerHTML =
+    `<strong>${totalSolved}</strong> solved · <strong>${activeDays}</strong> active days · ` +
+    `<strong>${currentStreak}</strong>d current streak · <strong>${longestStreak}</strong>d longest`;
+}
+
+function toKey(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
 async function loadData() {
